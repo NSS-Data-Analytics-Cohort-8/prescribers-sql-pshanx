@@ -95,14 +95,64 @@ LIMIT 1;
 --     b. Which drug (generic_name) has the hightest total cost per day? **Bonus: Round your cost per day column to 2 decimal places. Google ROUND to see how this works.**
 
 SELECT
+	generic_name,
+	total_day_supply,
+	total_drug_cost,
+	ROUND((p.total_drug_cost/p.total_day_supply),2) as per_diem
+FROM drug as d
+	LEFT JOIN prescription as p
+	ON d.drug_name = p.drug_name
+WHERE total_drug_cost NOTNULL
+GROUP BY
+	generic_name,
+	total_day_supply,
+	total_drug_cost
+ORDER BY per_diem DESC;
+
+
 
 -- 4. 
 --     a. For each drug in the drug table, return the drug name and then a column named 'drug_type' which says 'opioid' for drugs which have opioid_drug_flag = 'Y', says 'antibiotic' for those drugs which have antibiotic_drug_flag = 'Y', and says 'neither' for all other drugs.
 
+SELECT 
+	drug_name,
+	CASE WHEN opioid_drug_flag = 'Y' THEN 'opioid'
+		WHEN antibiotic_drug_flag = 'Y' THEN 'antibiotic'
+		ELSE 'neither' END AS drug_type
+FROM drug;
+
+
+
 --     b. Building off of the query you wrote for part a, determine whether more was spent (total_drug_cost) on opioids or on antibiotics. Hint: Format the total costs as MONEY for easier comparision.
+
+SELECT 
+	SUM(total_drug_cost) as total_antibiotic,
+		(SELECT 
+		 	SUM(total_drug_cost)
+		FROM drug as d
+			LEFT JOIN prescription as p
+			ON d.drug_name = p.drug_name
+		WHERE opioid_drug_flag ='Y') as total_opioid
+FROM drug as d
+	LEFT JOIN prescription as p
+	ON d.drug_name = p.drug_name
+WHERE antibiotic_drug_flag ='Y';
+
+	
 
 -- 5. 
 --     a. How many CBSAs are in Tennessee? **Warning:** The cbsa table contains information for all states, not just Tennessee.
+
+SELECT 
+	COUNT(cbsa)
+FROM cbsa as c
+	INNER JOIN zip_fips as zf
+	ON c.fipscounty = zf.fipscounty
+	INNER JOIN prescriber as p
+	ON zf.fipscounty = p.nppes_provider_zip5
+WHERE p.nppes_provider_state = 'TN'
+	
+	
 
 --     b. Which cbsa has the largest combined population? Which has the smallest? Report the CBSA name and total population.
 
