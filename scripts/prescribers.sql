@@ -146,20 +146,50 @@ WHERE antibiotic_drug_flag ='Y';
 SELECT 
 	COUNT(cbsa)
 FROM cbsa as c
-	INNER JOIN zip_fips as zf
+	LEFT JOIN zip_fips as zf
 	ON c.fipscounty = zf.fipscounty
 	INNER JOIN prescriber as p
 	ON zf.fipscounty = p.nppes_provider_zip5
-WHERE p.nppes_provider_state = 'TN'
+WHERE p.nppes_provider_state = 'TN';
 	
 	
 
 --     b. Which cbsa has the largest combined population? Which has the smallest? Report the CBSA name and total population.
 
+SELECT
+	cbsaname,
+	sum(population) as total_pop
+FROM cbsa as c
+	INNER JOIN zip_fips as z
+	ON c.fipscounty = z.fipscounty
+	INNER JOIN population as p
+	ON z.fipscounty = p.fipscounty
+GROUP BY cbsaname
+ORDER BY total_pop DESC;
+	--THIS FEELS SUPER WRONG, but most CBSA don't have a population reported.
+
+
+
 --     c. What is the largest (in terms of population) county which is not included in a CBSA? Report the county name and population.
+
+SELECT 
+	p.population,
+	f.county
+FROM fips_county as f 
+	INNER JOIN population as p
+	ON p.fipscounty = f.fipscounty
+WHERE f.fipscounty NOT IN
+		(SELECT fipscounty
+		FROM cbsa)
+ORDER BY population DESC
+LIMIT 1;
+	
 
 -- 6. 
 --     a. Find all rows in the prescription table where total_claims is at least 3000. Report the drug_name and the total_claim_count.
+
+SELECT 
+	drug_name
 
 --     b. For each instance that you found in part a, add a column that indicates whether the drug is an opioid.
 
