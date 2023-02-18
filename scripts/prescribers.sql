@@ -227,8 +227,78 @@ WHERE total_claim_count >=3000;
 
 -- 7. The goal of this exercise is to generate a full list of all pain management specialists in Nashville and the number of claims they had for each opioid. **Hint:** The results from all 3 parts will have 637 rows.
 
+SELECT specialty_description
+FROM prescriber
+WHERE specialty_description 
+	LIKE '%Pain%';
+	
+SELECT 
+	scrib.npi,
+	CONCAT(nppes_provider_first_name, ' ', nppes_provider_last_org_name) as full_name,
+	d.drug_name,
+	total_claim_count
+FROM prescriber as scrib
+	FULL JOIN prescription as scrip
+		ON scrib.npi = scrip.npi
+	FULL JOIN drug as d
+		ON scrip.drug_name = d.drug_name
+WHERE nppes_provider_city = 'NASHVILLE'
+	AND specialty_description LIKE '%Pain%'
+	AND opioid_drug_flag = 'Y'
+ORDER BY full_name;
+
+SELECT *
+FROM prescriber
+WHERE nppes_provider_last_org_name LIKE '%SCHOOLEY'
+
 --     a. First, create a list of all npi/drug_name combinations for pain management specialists (specialty_description = 'Pain Managment') in the city of Nashville (nppes_provider_city = 'NASHVILLE'), where the drug is an opioid (opiod_drug_flag = 'Y'). **Warning:** Double-check your query before running it. You will only need to use the prescriber and drug tables since you don't need the claims numbers yet.
 
+SELECT 
+	npi,
+	CONCAT(nppes_provider_first_name, ' ', nppes_provider_last_org_name) as full_name,
+	drug_name
+FROM prescriber
+	CROSS JOIN drug
+WHERE specialty_description = 'Pain Management'
+	AND nppes_provider_city = 'NASHVILLE'
+	AND opioid_drug_flag = 'Y'
+ORDER by full_name;
+
 --     b. Next, report the number of claims per drug per prescriber. Be sure to include all combinations, whether or not the prescriber had any claims. You should report the npi, the drug name, and the number of claims (total_claim_count).
-    
+
+
+SELECT 
+	scrib.npi,
+	CONCAT(nppes_provider_first_name, ' ', nppes_provider_last_org_name) as full_name,
+	drug.drug_name,
+	total_claim_count
+FROM prescriber as scrib
+	CROSS JOIN drug
+	FULL JOIN prescription as scrip
+		ON scrib.npi = scrip.npi 
+			AND drug.drug_name = scrip.drug_name
+WHERE specialty_description = 'Pain Management'
+	AND nppes_provider_city = 'NASHVILLE'
+	AND opioid_drug_flag = 'Y'
+ORDER by full_name;
+
+
+
 --     c. Finally, if you have not done so already, fill in any missing values for total_claim_count with 0. Hint - Google the COALESCE function.
+
+SELECT 
+	scrib.npi,
+	CONCAT(nppes_provider_first_name, ' ', nppes_provider_last_org_name) as full_name,
+	drug.drug_name,
+	CASE 
+		WHEN total_claim_count ISNULL THEN 0
+		ELSE total_claim_count END
+FROM prescriber as scrib
+	CROSS JOIN drug
+	FULL JOIN prescription as scrip
+		ON scrib.npi = scrip.npi 
+			AND drug.drug_name = scrip.drug_name
+WHERE specialty_description = 'Pain Management'
+	AND nppes_provider_city = 'NASHVILLE'
+	AND opioid_drug_flag = 'Y'
+ORDER by full_name;
